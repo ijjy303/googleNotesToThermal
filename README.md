@@ -3,5 +3,5 @@ Use Google Notes UI to manipulate lists or notes and use their labels as trigger
 
 Usage Example
 
-![Alt Text](https://github.com/ijjy303/googleNotesToThermal/blob/f13f3f4a86f26c4914f498ff684739ac767de102/final.gif)
+![Alt Text](https://github.com/ijjy303/googleNotesToThermal/blob/05b5e4a04046a0ddb00a1cbb3ef4b2e156e23677/final.gif)
 
