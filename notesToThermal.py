@@ -31,11 +31,17 @@ class thermalPrinter():
 		self.epson.image(img)
 		self.cut()
 
-	def printText(self, content):
-		""" Efficiently print to-do/grocery list. ie:
+	def printText(self, content, header=True, ordered=None):
+		""" Efficiently and dynamicallt print to-do/grocery list. ie:
 		One line contains maximum characters without spreading single checkbox, bullet or string onto multiple lines
 		"""
-		noteLines = content.strip().split('\n')
+		if header == True: # Note input argument has a title
+			title = content[0]
+			noteLines = content[-1].strip().split('\n')
+		
+		else: # Do not include a title/header
+			print(content)
+			noteLines = content[-1].strip().split('\n')
 		
 		formattedNote = ''
 		lineCounter = 0
@@ -52,6 +58,9 @@ class thermalPrinter():
 				formattedNote += f'\n{line} '
 				lineCounter += 1
 
+		if header == True: # After formatting content of note, prefix with title
+			formattedNote = f'{title}\n{formattedNote}'
+
 		print('Note reformatted to maximum efficiency.\nPrinting...')
 		self.epson.text(formattedNote)
 		self.cut()
@@ -63,6 +72,17 @@ class KeepNotes():
 		pswd = ''
 		self.imageFormat = '.jpg'
 		self.keep = keep
+		self.noteCategoryBorderL = '--------------'#'--------{---(@'
+		self.noteCategoryBorderR = '--------------'#'@)---}--------' 
+		# Below example needs to be imported from a json file using json library. Multiple jsons, mulitple stores.
+		self.storeAisles = {
+			'Aisle-0': ['fruit', 'oranges', 'apple', 'kiwi', 'bread', 'crackers', 'celery', 'chips', 'vegetables'],
+			'Aisle-1': ['cereal', 'granola', 'lettuce', 'coffee', 'croutons', 'dressing', 'salad'],
+			'Aisle-2': ['trash bags', 'zipclock bags', 'ziploc', 'toilet paper'],
+			'Aisle-3': ['spaghetti sauce', '', '', ''],
+			'Aisle-4': ['cheesecake', '', '', ''],
+			'Aisle-5': ['ice cream', 'milk', 'butter', 'yogurt', 'water', 'meat']
+		}
 
 		try: # Try resuming previous API session using token....
 			print('Attemping to use previous login token...')
@@ -165,14 +185,47 @@ class KeepNotes():
 
 		self.keep.sync() # Have to sync with Google, otherwise no changes will be made.
 
-	def getNotesWith(self, *args, **kwargs):
+	def getNotesWith(self, ordered=None, *args, **kwargs):
 		notes = self.searchFor(kwargs)
 		noteBlobs = []
 		for note in notes:
+			noteTitle = note.title
 			note = f'{note.text}'.replace('☐', '[ ]') # replace any checkbox unicode characters with regular brackets
-			noteBlobs.append(note)
+			noteBlobs.append([noteTitle, note])
+		
+		if ordered == 'grocery': # If ordered specified as grocery, reorganize grocery list according to aisle. ie: Most efficient buying route
+			for note in noteBlobs:
+				groceries = note[-1].replace('[ ] ', '').split('\n') # [-1] References the content (not title) of note, reduce list strings to item names
+				groceries = [x.strip().lower() for x in groceries] # Remove trailing \n chars. Leaving lowercase values without check boxes, fluff, etc...
+				basket = {} # Create a dictionary, corresponding to the final 'basket'
 
-		return noteBlobs
+				for lotion in groceries:
+					basket[lotion] = 'None-Misc' # Fill up the dict basket with items. All items start with None-Misc location value
+
+				aisles = self.storeAisles # We can remove this later when json library is fleshed out and json file is loaded upon class __init__
+
+				for aisle in aisles: # For each aisle in json/dict
+					for item, location in basket.items(): # Get each item and location in basket
+						if item in aisles[aisle] and location == 'None-Misc':  # If basket item found in json aisle..
+							basket[item] = aisle # assign known aisle to basket item location
+				sortBasket = sorted(basket.items(), key=lambda x: (x[1], x[0])) # Sort by aisle, then alphabetically for optimal buying route and visual reference
+
+				items = []
+				aisleCounter = 0 # Counter to determine which aisle we're one
+				for item, location in sortBasket:
+					location = location.split('-')[1]
+					if location == aisleCounter:
+						items.append(f'[ ] {item.capitalize()}\n') # Add item to note blob
+					else: # Location of item is different...
+						aisleCounter = location # update aisle counter to current aisle.
+						items.append(f'{self.noteCategoryBorderL} Aisle: {location} {self.noteCategoryBorderR}\n[ ] {item.capitalize()}\n') # Label each part of the note with respective aisle.
+						#items.append(f'--------{{---(@ Aisle {location} @)---}}--------\n[ ] {item.capitalize()}\n') # Label each part of the note with respective aisle.
+				
+				note.pop(-1) # Remove old list
+				note.append(''.join(items)) # Append new list smooshed into a single string
+		
+		print(noteBlobs)
+		return noteBlobs # Returns as 2D array because their may be multiple notes
 
 	def removeLabel(self, rmLabel=None, *args, **kwargs): # Can only remove one label at a time for now...
 		notes = self.searchFor(kwargs)
@@ -208,15 +261,5 @@ class KeepNotes():
 if __name__ == '__main__':
 	tp = thermalPrinter()
 	nt = KeepNotes()
-	while True:
-		nt.sync()
-		try:
-			notes = nt.getNotesWith(label='print-me')
-			[tp.printText(note) for note in notes]
-			nt.removeLabel(label='print-me')
-		
-		except Exception as e:
-			print(e)
-			pass
-
-		time.sleep(2.5)
+	notes = nt.getNotesWith(label='print-me', ordered='grocery')
+	[tp.printText(note) for note in notes]
