@@ -32,7 +32,7 @@ class thermalPrinter():
 		self.cut()
 
 	def printText(self, content, header=True, ordered=None):
-		""" Efficiently and dynamicallt print to-do/grocery list. ie:
+		""" Efficiently print to-do/grocery list. ie:
 		One line contains maximum characters without spreading single checkbox, bullet or string onto multiple lines
 		"""
 		if header == True: # Note input argument has a title
@@ -64,6 +64,7 @@ class thermalPrinter():
 		print('Note reformatted to maximum efficiency.\nPrinting...')
 		self.epson.text(formattedNote)
 		self.cut()
+		return True
 
 class KeepNotes():
 	def __init__(self):
@@ -170,23 +171,35 @@ class KeepNotes():
 			name = f'{x}{self.imageFormat}' # Establish name for image based on enumeration. ie: 1.jpg, 2.jpg, etc...
 			print(f'Saving image: {name}...')
 			self.saveUrlToImg(url=url, name=name) # Use requests and shutil libraries to convert url to jpg
-	
-	def createNote(self, title='None', content='None'): # Create note using title and content arguments.
-		self.keep.createNote(title, content)
-		print('Note created...')
-		
-		self.keep.sync()
 
 	def deleteNoteBy(self, *args, **kwargs): # Delete note matching specified id, keyword or label.
 		notes = self.searchFor(kwargs)
 		for note in notes:
 			print('Deleting note...')
 			note.delete()
+		#self.keep.sync() # Have to sync with Google, otherwise no changes will be made.
 
-		self.keep.sync() # Have to sync with Google, otherwise no changes will be made.
+	def createOrganizedCopy(self, *args, **kwargs):
+		notes = self.getNotesWith(label=kwargs['label'], ordered='grocery') # Need to make this dynamic later (take, label, ID, etc...)
+
+		for note in notes:
+			orgNote = []
+			for line in note[-1].split('\n'):
+				if '[ ]' in line:
+					line = line.replace('[ ]', '')
+					line = tuple((line, False))
+					orgNote.append(line)
+				else:
+					line = line.replace('-----', '')
+					line = tuple((line, False))
+					orgNote.append(line)
+
+			self.keep.createList(note[0], orgNote)
+			print('Organize note and created it...')
 
 	def getNotesWith(self, ordered=None, *args, **kwargs):
 		notes = self.searchFor(kwargs)
+		
 		noteBlobs = []
 		for note in notes:
 			noteTitle = note.title
@@ -224,7 +237,7 @@ class KeepNotes():
 				note.pop(-1) # Remove old list
 				note.append(''.join(items)) # Append new list smooshed into a single string
 		
-		print(noteBlobs)
+		#print(noteBlobs)
 		return noteBlobs # Returns as 2D array because their may be multiple notes
 
 	def removeLabel(self, rmLabel=None, *args, **kwargs): # Can only remove one label at a time for now...
@@ -252,7 +265,6 @@ class KeepNotes():
 			else:
 				raise ValueError(f'Label not defined in argument.\nI even tried to check the note identifier for you.\nYou failed.')
 
-		self.keep.sync()
 		return True
 
 	def sync(self):
@@ -260,6 +272,6 @@ class KeepNotes():
 
 if __name__ == '__main__':
 	tp = thermalPrinter()
-	nt = KeepNotes()
-	notes = nt.getNotesWith(label='print-me', ordered='grocery')
+	kn = KeepNotes()
+	notes = kn.getNotesWith(label='print-me', ordered='grocery')
 	[tp.printText(note) for note in notes]
