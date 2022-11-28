@@ -2,6 +2,8 @@
 Use Google Notes UI to manipulate lists or notes and use their labels as triggers to print them with an Epson TM-T88V.<br>
 Confirmed working on NanoPiNeo running Armbian! See [link](https://github.com/ijjy303/googleNotesToThermal/blob/main/armbian-scripts/armbian-install-script.sh) for installation instructions
 
+<img src="https://github.com/ijjy303/googleNotesToThermal/blob/3bbf7e65e94f214db3cfaf3b7dff64e48ca312dd/examples/final.gif" width="604"> 
+
 ## Main function
 - Use and Assign labels to notes on Google Keep Notes mobile app in order to trigger specific events.
 - Can trigger any event or script running on 'listener' GkeepAPI python script
@@ -19,7 +21,6 @@ Confirmed working on NanoPiNeo running Armbian! See [link](https://github.com/ij
 
 ## In Action:
 <img src="https://github.com/ijjy303/googleNotesToThermal/blob/3bbf7e65e94f214db3cfaf3b7dff64e48ca312dd/examples/note2thermNPiNeo.jpg" width="525"> <img src="https://github.com/ijjy303/googleNotesToThermal/blob/3bbf7e65e94f214db3cfaf3b7dff64e48ca312dd/examples/optimal-route.jpg" width="395">
-<img src="https://github.com/ijjy303/googleNotesToThermal/blob/3bbf7e65e94f214db3cfaf3b7dff64e48ca312dd/examples/final.gif" width="604"> 
 
 ## Credit
 - gkeepapi library documentation: https://gkeepapi.readthedocs.io/en/latest/
