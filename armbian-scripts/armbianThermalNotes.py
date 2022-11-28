@@ -74,7 +74,8 @@ class KeepNotes():
 		self.imageFormat = '.jpg'
 		self.keep = keep
 		self.noteCategoryBorderL = '--------------'#'--------{---(@'
-		self.noteCategoryBorderR = '--------------'#'@)---}--------' 
+		self.noteCategoryBorderR = '--------------'#'@)---}--------'
+		success = keep.login(user, pswd)
 		# Below example needs to be imported from a json file using json library. Multiple jsons, mulitple stores.
 		self.storeAisles = {
 			'Aisle-0': ['fruit', 'oranges', 'apple', 'kiwi', 'bread', 'crackers', 'celery', 'chips', 'vegetables'],
