@@ -40,13 +40,18 @@ sudo /etc/init.d/cups restart
 
 # Connect the Epson printer 
 # Go to the following address to access CUPS
+hostname -I
 # https://NANOPINEOSIPADDRESSHERE:631/admin/
 
-# When I accessed CUPs interface Epson appeared as 'Unknown' device as radial button.
-# Go through the prompts, selecting all the default values
-
-### Select the option to Choose a PPD File. Select the one in this repo, located here:
+# "Add printer"
+# Provide login user/pswd
+# Select 'unknown' radial button
+# Input w/e name you want for network printer info
+# I chose to 'sahre printer'
+# Select "Epson" from "make" drop down
+# Select "Provide a PPD file"
 # https://github.com/ijjy303/googleNotesToThermal/blob/main/armbian-scripts/epson-tm-t88v-rastertotmt88v.ppd
+# All default options
 
 # When I printed a test page, Epson did feed paper however CUPs logged an error
 # This was inconsequential as the escpos library was able to interface with it as expected.
