@@ -1,6 +1,5 @@
 # googleNotesToThermal
-Use Google Notes UI to manipulate lists or notes and use their labels as triggers to print them with an Epson TM-T88V.<br>
-Confirmed working on NanoPiNeo running Armbian! See [link](https://github.com/ijjy303/googleNotesToThermal/blob/main/armbian-scripts/armbian-install-script.sh) for installation instructions
+Use Google Notes UI to manipulate lists or notes and use their labels as triggers to print them with an Epson TM-T88V. Confirmed working on NanoPiNeo running Armbian! See [link](https://github.com/ijjy303/googleNotesToThermal/blob/main/armbian-scripts/armbian-install-script.sh) for installation instructions
 
 <img src="https://github.com/ijjy303/googleNotesToThermal/blob/3bbf7e65e94f214db3cfaf3b7dff64e48ca312dd/examples/final.gif" width="604"> 
 
