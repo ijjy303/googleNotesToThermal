@@ -5,7 +5,7 @@ class ThermalPrinter():
 	def __init__(self):
 		self.epson = printer.Usb(0x04B8, 0x0202) # WinUSB Port IDs of Epson M224A
 		self.maxCharPerLine = 42 # The maximum characters per line that will fit on Epson TM-T88V
-		self.footer = 'Generated: %NOW%\nhttps://github.com/ijjy303/googleNotesToThermal'
+		self.footer = '\n\n\n\n\nGenerated: %NOW%\ngithub.com/ijjy303/googleNotesToThermal'
 
 	def cut(self):
 		self.epson.cut()
