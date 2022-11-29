@@ -1,11 +1,15 @@
 from escpos import *
-from random import randrange
-import gkeepapi, requests, shutil, time#, keyring
+import gkeepapi, shutil, time, yaml
+
+armbian = True
+if armbian != True:
+	import keyring
 
 class ThermalPrinter():
 	def __init__(self):
 		self.epson = printer.Usb(0x04B8, 0x0202) # WinUSB Port IDs of Epson M224A
 		self.maxCharPerLine = 42 # The maximum characters per line that will fit on Epson TM-T88V
+		self.footer = 'Generated: %NOW%\nhttps://github.com/ijjy303/googleNotesToThermal'
 
 	def cut(self):
 		self.epson.cut()
@@ -31,7 +35,7 @@ class ThermalPrinter():
 		self.epson.image(img)
 		self.cut()
 
-	def printText(self, content, header=True, ordered=None):
+	def printText(self, content, header=True, footer=True, ordered=None):
 		""" Efficiently print to-do/grocery list. ie:
 		One line contains maximum characters without spreading single checkbox, bullet or string onto multiple lines
 		"""
@@ -61,7 +65,12 @@ class ThermalPrinter():
 		if header == True: # After formatting content of note, prefix with title
 			formattedNote = f'{title}\n{formattedNote}'
 
+		if footer == True:
+			from datetime import datetime as dt
+			formattedNote += self.footer.replace('%NOW%', f'{dt.now().strftime("%m.%d.%Y @ %H:%M:%S")}')
+
 		print('Note reformatted to maximum efficiency.\nPrinting...')
+		print(formattedNote)
 		self.epson.text(formattedNote)
 		self.cut()
 		return True
@@ -69,34 +78,38 @@ class ThermalPrinter():
 class KeepNotes():
 	def __init__(self):
 		keep = gkeepapi.Keep()
-		user = ''
-		pswd = ''
+		
+		with open('keepConfig.yml', 'r') as y:
+			keepConfig = yaml.safe_load(y)
+
+		user = keepConfig['user']
+		pswd = keepConfig['pswd']
+		
+		if user == '' or pswd == '':
+			raise ValueError('Missing login credentials...')
+
 		self.imageFormat = '.jpg'
 		self.keep = keep
-		self.noteCategoryBorderL = '--------------'#'--------{---(@'
-		self.noteCategoryBorderR = '--------------'#'@)---}--------'
-		success = keep.login(user, pswd)
+		self.catBorderL = '--------------'#'--------{---(@'
+		self.catBorderR = '--------------'#'@)---}--------' 
 		# Below example needs to be imported from a json file using json library. Multiple jsons, mulitple stores.
-		self.storeAisles = {
-			'Aisle-0': ['fruit', 'oranges', 'apple', 'kiwi', 'bread', 'crackers', 'celery', 'chips', 'vegetables'],
-			'Aisle-1': ['cereal', 'granola', 'lettuce', 'coffee', 'croutons', 'dressing', 'salad'],
-			'Aisle-2': ['trash bags', 'zipclock bags', 'ziploc', 'toilet paper'],
-			'Aisle-3': ['spaghetti sauce', '', '', ''],
-			'Aisle-4': ['cheesecake', '', '', ''],
-			'Aisle-5': ['ice cream', 'milk', 'butter', 'yogurt', 'water', 'meat']
-		}
-		""" Have not been able to compile keyring library on NanoPiNeo Running Armbian
-		try: # Try resuming previous API session using token....
-			print('Attemping to use previous login token...')
-			token = keyring.get_password('google-keep-token', user)
-			keep.resume(user, token)
+		self.storeAisles = keepConfig['grocery-store']
+
+		if armbian != True:
+			try: # Try resuming previous API session using token....
+				print('Attemping to use previous login token...')
+				token = keyring.get_password('google-keep-token', user)
+				keep.resume(user, token)
 		
-		except: # Token not present or old, create a new token...
-			print('Logging in...')
+			except: # Token not present or old, create a new token...
+				print('Logging in...')
+				success = keep.login(user, pswd)
+				token = keep.getMasterToken()
+				keyring.set_password('google-keep-token', user, token)
+		else:
+			print('Running armbian script...')
 			success = keep.login(user, pswd)
-			token = keep.getMasterToken()
-			keyring.set_password('google-keep-token', user, token)
-		"""
+	
 	def noteFound(self, notes): # Determines if note search function has matched on a note or not.
 		if notes in [[], None, [None]]: # If note object is variation of empty None value...
 			return False # Note not found
@@ -150,9 +163,10 @@ class KeepNotes():
 			if argument not in ['ID', 'keyword', 'label']:
 				raise ValueError(f'Invalid "{argument}" argument. Search arguments include: ID, keyword, label')
 			else:
-				raise ValueError('Note search unsuccessful...')
+				raise ValueError('Note search unsuccessful. Try swiping down to refresh Google Notes App...')
 
 	def saveUrlToImg(self, url=None, name=f'default.jpg'): # Use requests and shutil to download img from url and save to file.
+		import requests
 		response = requests.get(url, stream=True)
 		with open(name, 'wb') as outFile:
 		    shutil.copyfileobj(response.raw, outFile)
@@ -216,11 +230,9 @@ class KeepNotes():
 				for lotion in groceries:
 					basket[lotion] = 'None-Misc' # Fill up the dict basket with items. All items start with None-Misc location value
 
-				aisles = self.storeAisles # We can remove this later when json library is fleshed out and json file is loaded upon class __init__
-
-				for aisle in aisles: # For each aisle in json/dict
+				for aisle in self.storeAisles: # For each aisle in json/dict
 					for item, location in basket.items(): # Get each item and location in basket
-						if item in aisles[aisle] and location == 'None-Misc':  # If basket item found in json aisle..
+						if item in self.storeAisles[aisle] and location == 'None-Misc':  # If basket item found in json aisle..
 							basket[item] = aisle # assign known aisle to basket item location
 				sortBasket = sorted(basket.items(), key=lambda x: (x[1], x[0])) # Sort by aisle, then alphabetically for optimal buying route and visual reference
 
@@ -232,8 +244,7 @@ class KeepNotes():
 						items.append(f'[ ] {item.capitalize()}\n') # Add item to note blob
 					else: # Location of item is different...
 						aisleCounter = location # update aisle counter to current aisle.
-						items.append(f'{self.noteCategoryBorderL} Aisle: {location} {self.noteCategoryBorderR}\n[ ] {item.capitalize()}\n') # Label each part of the note with respective aisle.
-						#items.append(f'--------{{---(@ Aisle {location} @)---}}--------\n[ ] {item.capitalize()}\n') # Label each part of the note with respective aisle.
+						items.append(f'{self.catBorderL} Aisle: {location} {self.catBorderR}\n[ ] {item.capitalize()}\n') # Label each part of the note with respective aisle.
 				
 				note.pop(-1) # Remove old list
 				note.append(''.join(items)) # Append new list smooshed into a single string
