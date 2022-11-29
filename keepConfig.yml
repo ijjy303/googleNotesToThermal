@@ -1,0 +1,9 @@
+user: ''
+pswd: ''
+grocery-store: 
+  Aisle-0: ['fruit', 'oranges', 'apple', 'kiwi', 'bread', 'crackers', 'celery', 'chips', 'vegetables']
+  Aisle-1: ['cereal', 'granola', 'lettuce', 'coffee', 'croutons', 'dressing', 'salad']
+  Aisle-2: ['trash bags', 'zipclock bags', 'ziploc', 'toilet paper']
+  Aisle-3: ['spaghetti sauce', '', '', '']
+  Aisle-4: ['cheesecake', '', '', '']
+  Aisle-5: ['ice cream', 'milk', 'butter', 'yogurt', 'water', 'meat']
