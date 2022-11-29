@@ -17,7 +17,6 @@ pip3 install Pillow
 
 pip3 install escpos
 pip3 install gkeepapi
-sudo apt-get install scons
 
 # pip3 install keyring # Still haven't gotten keyring to compile on Arbmian due to compiler error.
 # Key ring module has been removed from Armbian script for now.
